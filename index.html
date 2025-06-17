@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Memori Gambar</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      background: linear-gradient(to right, #f0f8ff, #e0ffff);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1.judul {
+      display: inline-block;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: white;
+      font-size: 2em;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+    }
+
+    #welcomeScreen {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #welcomeScreen h2 {
+      font-size: 1.5em;
+      color: #2c3e50;
+    }
+
+    #welcomeScreen button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 1em;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    #loginContainer {
+      display: none;
+      background: white;
+      padding: 20px;
+      max-width: 300px;
+      margin: 50px auto;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    #loginContainer input {
+      display: block;
+      width: 90%;
+      padding: 10px;
+      margin: 10px auto;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    #loginContainer button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #logoutBtn {
+      display: none;
+      margin: 30px auto 0;
+      padding: 12px 24px;
+      font-size: 1em;
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    #score {
+      font-size: 1.2em;
+      margin: 10px 0;
+      color: #34495e;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .card {
+      width: 100px;
+      height: 100px;
+      perspective: 600px;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+    }
+
+    .card-front {
+      background: #007bff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2em;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 2px solid #007bff;
+    }
+
+    .card-back img {
+      width: 90%;
+      height: 90%;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .card.matched .card-inner {
+      animation: pulse 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: #27ae60;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #7f8c8d;
+    }
+
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: red;
+      top: -10px;
+      animation: fall 3s linear infinite;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+      }
+    }
+
+    /* logout popup */
+    #logoutPopup {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #logoutPopupContent {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 300px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    #logoutPopupContent button {
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .stay-btn {
+      background: #00c6ff;
+    }
+
+    .logout-btn {
+      background: #ff4b2b;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="judul">Game Memori Gambar Angka</h1>
+
+  <div id="welcomeScreen">
+    <h2>Ayoo asah menghafalmu dengan bermain game ini</h2>
+    <button onclick="showLogin()">Mulai Game</button>
+  </div>
+
+  <div id="loginContainer">
+    <h3>Masukkan Namamu</h3>
+    <input type="text" id="username" placeholder="Nama kamu...">
+    <button onclick="login()">Masuk</button>
+  </div>
+
+  <div id="gameScreen" style="display:none;">
+    <div id="score">Poin: 0</div>
+    <p id="message"></p>
+    <div class="game-board" id="gameBoard"></div>
+    <button id="logoutBtn" onclick="logout()">Keluar dari Game</button>
+  </div>
+
+  <div id="logoutPopup">
+    <div id="logoutPopupContent">
+      <p>kamu yakin mau keluar dari game?</p>
+      <button class="stay-btn" onclick="cancelLogout()">stay di game</button>
+      <button class="logout-btn" onclick="confirmLogout()">beneran log out</button>
+    </div>
+  </div>
+
+  <footer>&copy; 2025 Husni Syaifal Ulum</footer>
+
+  <script>
+    const imagePaths = [
+      '1.jpg','2.jpg','3.jpg','4.jpg','5.jpg','6.jpg','7.jpg','8.jpg'
+    ];
+    let cards = [...imagePaths, ...imagePaths].sort(() => 0.5 - Math.random());
+
+    const board = document.getElementById('gameBoard');
+    const scoreDisplay = document.getElementById('score');
+    const messageDisplay = document.getElementById('message');
+    const logoutPopup = document.getElementById('logoutPopup');
+    let flippedCards = [];
+    let matchedCount = 0;
+    let score = 0;
+    let gameLocked = true;
+    let currentUser = '';
+
+    function showLogin() {
+      document.getElementById('welcomeScreen').style.display = 'none';
+      document.getElementById('loginContainer').style.display = 'block';
+    }
+
+    function login() {
+      const user = document.getElementById('username').value.trim();
+      if (user === '') {
+        alert('Nama tidak boleh kosong');
+        return;
+      }
+
+      currentUser = user;
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'block';
+      document.getElementById('logoutBtn').style.display = 'block';
+      messageDisplay.innerText = `Selamat bermain, ${user}! 🎮`;
+      gameLocked = false;
+      startGame();
+    }
+
+    function logout() {
+      logoutPopup.style.display = 'flex';
+    }
+
+    function cancelLogout() {
+      logoutPopup.style.display = 'none';
+      // tetap di game, gak pindah ke login atau welcome screen
+    }
+
+    function confirmLogout() {
+      logoutPopup.style.display = 'none';
+      // benar-benar keluar dari game, tampilkan layar kosong
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('welcomeScreen').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'none';
+      currentUser = '';
+      score = 0;
+      matchedCount = 0;
+      flippedCards = [];
+      gameLocked = true;
+      messageDisplay.innerText = '';
+      scoreDisplay.innerText = 'Poin: 0';
+      alert('kamu sudah keluar dari game');
+    }
+
+    function startGame() {
+      board.innerHTML = '';
+      score = 0;
+      matchedCount = 0;
+      scoreDisplay.innerText = 'Poin: 0';
+      cards = [...imagePaths, ...imagePaths].sort(() => 0.5 - Math.random());
+
+      cards.forEach((imgSrc) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.image = imgSrc;
+
+        const inner = document.createElement('div');
+        inner.className = 'card-inner';
+
+        const front = document.createElement('div');
+        front.className = 'card-front';
+        front.innerText = '?';
+
+        const back = document.createElement('div');
+        back.className = 'card-back';
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        back.appendChild(img);
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        card.appendChild(inner);
+
+        card.addEventListener('click', flipCard);
+        board.appendChild(card);
+      });
+    }
+
+    function flipCard(e) {
+      if (gameLocked) return;
+      const card = e.currentTarget;
+      if (card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length === 2) return;
+
+      card.classList.add('flipped');
+      flippedCards.push(card);
+
+      if (flippedCards.length === 2) {
+        const [first, second] = flippedCards;
+        if (first.dataset.image === second.dataset.image) {
+          first.classList.add('matched');
+          second.classList.add('matched');
+          matchedCount++;
+          score += 10;
+          flippedCards = [];
+
+          if (matchedCount === imagePaths.length) {
+            messageDisplay.innerText = `🎉 Selamat! ${currentUser}, kamu menang!`;
+            spawnConfetti(100);
+          }
+        } else {
+          score -= 2;
+          setTimeout(() => {
+            first.classList.remove('flipped');
+            second.classList.remove('flipped');
+            flippedCards = [];
+          }, 1000);
+        }
+        scoreDisplay.innerText = 'Poin: ' + score;
+      }
+    }
+
+    function spawnConfetti(count) {
+      for (let i = 0; i < count; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+        confetti.style.animationDuration = 2 + Math.random() * 3 + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 5000);
+      }
+    }
+  </script>
+</body>
+</html>
